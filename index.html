@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>ZK Vault Mobile</title>
+    
+    <meta name="theme-color" content="#0f172a">
+    <link rel="manifest" href="manifest.json">
+    
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
@@ -12,41 +16,45 @@
         body { 
             background-color: #f1f5f9; 
             font-family: 'Plus Jakarta Sans', sans-serif; 
-            padding-bottom: 80px; /* Ruang untuk bottom nav */
+            padding-bottom: 90px;
         }
 
-        /* Header Mobile */
         .mobile-header {
             background: #0f172a;
             color: white;
-            padding: 20px;
-            border-radius: 0 0 25px 25px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            padding: 25px 20px;
+            border-radius: 0 0 30px 30px;
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.2);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
         }
 
-        /* Card Style */
         .data-card {
             border: none;
-            border-radius: 15px;
+            border-radius: 18px;
             background: white;
-            margin-bottom: 12px;
-            padding: 15px;
+            margin-bottom: 15px;
+            padding: 18px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+            transition: transform 0.2s;
         }
 
-        /* Bottom Navigation */
+        .data-card:active { transform: scale(0.98); }
+
         .bottom-nav {
             position: fixed;
             bottom: 0;
             left: 0;
             right: 0;
-            background: white;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
             display: flex;
             justify-content: space-around;
-            padding: 12px 0;
+            padding: 15px 0;
             border-top: 1px solid #e2e8f0;
             z-index: 1000;
         }
@@ -55,36 +63,36 @@
             text-align: center;
             color: #64748b;
             text-decoration: none;
-            font-size: 0.75rem;
-            font-weight: 600;
+            font-size: 0.7rem;
+            font-weight: 700;
+            flex: 1;
         }
 
         .nav-item.active { color: #0284c7; }
-        .nav-item i { font-size: 1.4rem; display: block; }
+        .nav-item i { font-size: 1.5rem; display: block; margin-bottom: 2px; }
 
-        .status-badge {
-            font-size: 0.7rem;
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-weight: 700;
-        }
-
-        .hidden-node { display: none !important; }
-
-        /* Floating Action Button Style for Link */
         .fab-link {
             background: #0284c7;
             color: white;
-            width: 55px;
-            height: 55px;
+            width: 60px;
+            height: 60px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-top: -30px;
-            border: 4px solid #f1f5f9;
-            box-shadow: 0 4px 10px rgba(2, 132, 199, 0.4);
+            margin-top: -40px;
+            border: 5px solid #f1f5f9;
+            box-shadow: 0 8px 15px rgba(2, 132, 199, 0.3);
         }
+
+        .status-badge {
+            font-size: 0.65rem;
+            padding: 5px 12px;
+            border-radius: 30px;
+            letter-spacing: 0.5px;
+        }
+
+        #pageIndicator { font-size: 0.85rem; }
     </style>
 </head>
 <body>
@@ -92,111 +100,160 @@
 <div class="mobile-header">
     <div class="d-flex justify-content-between align-items-center">
         <div>
-            <h5 class="fw-bold mb-0">ZK Vault</h5>
-            <small id="statusText" class="opacity-75">Checking connection...</small>
+            <h4 class="fw-bold mb-0">ZK Vault</h4>
+            <small id="statusText" class="opacity-75 font-monospace">Disconnected</small>
         </div>
-        <div id="connectionDot" class="rounded-circle" style="width: 12px; height: 12px; background: grey;"></div>
+        <div id="connectionDot" class="rounded-circle" style="width: 12px; height: 12px; background: #ef4444; border: 2px solid rgba(255,255,255,0.2);"></div>
     </div>
 </div>
 
-<div class="container mt-4" id="mainContent">
+<div class="container mt-4">
     <div id="dataContainer"></div>
+
+    <div class="d-flex justify-content-between align-items-center mt-4 mb-4" id="paginationControls">
+        <button class="btn btn-dark btn-sm rounded-pill px-3" id="prevBtn" onclick="changePage(-1)">
+            <i class="bi bi-arrow-left"></i>
+        </button>
+        <span class="fw-bold text-secondary" id="pageIndicator">Page 1 / 1</span>
+        <button class="btn btn-dark btn-sm rounded-pill px-3" id="nextBtn" onclick="changePage(1)">
+            <i class="bi bi-arrow-right"></i>
+        </button>
+    </div>
 </div>
 
 <div class="bottom-nav">
-    <a href="#" class="nav-item active" onclick="location.reload()">
-        <i class="bi bi-grid-fill"></i> Dashboard
+    <a href="#" class="nav-item active" onclick="window.scrollTo(0,0)">
+        <i class="bi bi-shield-shaded"></i> Vault
     </a>
     
     <label class="nav-item">
         <div class="fab-link">
             <i class="bi bi-plus-lg"></i>
         </div>
-        Link JSON
+        <span style="display:block; margin-top:5px;">Link JSON</span>
         <input type="file" id="filePicker" accept=".json" hidden>
     </label>
 
-    <a href="#" class="nav-item text-danger" id="btnReset" onclick="resetApp()">
-        <i class="bi bi-trash3"></i> Reset
+    <a href="#" class="nav-item" onclick="resetApp()">
+        <i class="bi bi-arrow-counterclockwise"></i> Reset
     </a>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-    const serverNodes = Array.from({length: 15}, (_, i) => ({
+    // 1. DATA MASTER (Simulasi Sisi Server)
+    const serverNodes = Array.from({length: 100}, (_, i) => ({
         uuid: `ID-${1001 + i}`,
-        masked: `NODE_0x${(1000+i).toString(16)}`
+        masked: `HIDDEN_NODE_${1000 + i}`
     }));
 
     let localMap = null;
+    let currentPage = 1;
+    const itemsPerPage = 10;
 
+    // 2. INITIALIZATION (Auto-Unlock)
     function init() {
         const saved = localStorage.getItem('zk_simple_key');
         const statusText = document.getElementById('statusText');
         const statusDot = document.getElementById('connectionDot');
-        const btnReset = document.getElementById('btnReset');
 
         if (saved) {
-            localMap = JSON.parse(saved);
-            statusText.innerText = "Local Engine Active";
-            statusDot.style.background = "#10b981";
-            btnReset.classList.remove('hidden-node');
+            try {
+                localMap = JSON.parse(saved);
+                statusText.innerText = "Engine: Active";
+                statusDot.style.background = "#10b981";
+            } catch(e) {
+                localStorage.removeItem('zk_simple_key');
+            }
         } else {
             localMap = null;
-            statusText.innerText = "System Masked";
+            statusText.innerText = "Engine: Masked";
             statusDot.style.background = "#ef4444";
-            btnReset.classList.add('hidden-node');
         }
         render();
     }
 
+    // 3. RENDER ENGINE
     function render() {
         const container = document.getElementById('dataContainer');
         container.innerHTML = "";
-        
-        serverNodes.forEach(node => {
+
+        const dataSource = localMap 
+            ? Object.keys(localMap).map(key => ({ uuid: key, masked: 'NODE_MASKED' }))
+            : serverNodes;
+
+        const totalPages = Math.ceil(dataSource.length / itemsPerPage);
+        if (currentPage > totalPages) currentPage = totalPages || 1;
+
+        const start = (currentPage - 1) * itemsPerPage;
+        const pageData = dataSource.slice(start, start + itemsPerPage);
+
+        pageData.forEach(node => {
             const realName = localMap ? localMap[node.uuid] : null;
             container.innerHTML += `
                 <div class="data-card">
                     <div>
-                        <div class="text-muted small fw-bold">${node.uuid}</div>
-                        <div class="fw-bold h6 mb-0">${realName ? realName : node.masked}</div>
+                        <div class="text-muted small fw-bold font-monospace">${node.uuid}</div>
+                        <div class="fw-bold h6 mb-0 text-dark">${realName ? realName : node.masked}</div>
                     </div>
                     <div>
                         ${realName 
-                            ? '<span class="status-badge bg-success-subtle text-success">VERIFIED</span>' 
-                            : '<span class="status-badge bg-light text-muted">MASKED</span>'}
+                            ? '<span class="status-badge bg-success-subtle text-success fw-bold">VERIFIED</span>' 
+                            : '<span class="status-badge bg-light text-muted fw-bold">MASKED</span>'}
                     </div>
                 </div>`;
         });
+
+        document.getElementById('pageIndicator').innerText = `Page ${currentPage} / ${totalPages}`;
+        document.getElementById('prevBtn').disabled = (currentPage === 1);
+        document.getElementById('nextBtn').disabled = (currentPage === totalPages || totalPages === 0);
+        document.getElementById('paginationControls').style.display = (totalPages <= 1) ? 'none' : 'flex';
     }
 
+    function changePage(step) {
+        currentPage += step;
+        render();
+        window.scrollTo(0, 0);
+    }
+
+    // 4. FILE PICKER
     document.getElementById('filePicker').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
         const reader = new FileReader();
         reader.onload = (ev) => {
-            localStorage.setItem('zk_simple_key', ev.target.result);
-            Swal.fire({ icon: 'success', title: 'Vault Linked!', toast: true, position: 'top', showConfirmButton: false, timer: 2000 });
-            init();
+            try {
+                JSON.parse(ev.target.result); // Validasi JSON
+                localStorage.setItem('zk_simple_key', ev.target.result);
+                currentPage = 1;
+                init();
+                Swal.fire({ icon: 'success', title: 'Identity Linked', toast: true, position: 'top', showConfirmButton: false, timer: 2000 });
+            } catch(err) {
+                Swal.fire('Error', 'File JSON tidak valid', 'error');
+            }
         };
-        reader.readAsText(e.target.files[0]);
+        reader.readAsText(file);
     });
 
     function resetApp() {
         Swal.fire({
-            title: 'Hapus Data?',
-            text: "Koneksi ke identitas lokal akan terputus.",
+            title: 'Hapus Sesi?',
+            text: "Koneksi ke identitas lokal akan dihapus.",
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonText: 'Ya, Hapus'
+            confirmButtonColor: '#0f172a',
+            confirmButtonText: 'Ya, Reset'
         }).then((result) => {
             if (result.isConfirmed) {
                 localStorage.removeItem('zk_simple_key');
+                currentPage = 1;
                 init();
             }
         });
     }
 
-    // PWA Service Worker Registration
+    // PWA REGISTRATION
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
             navigator.serviceWorker.register('./sw.js');

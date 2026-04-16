@@ -1,6 +1,6 @@
 {
-  "short_name": "ZK-Vault",
-  "name": "ZK Identity Hydrator",
+  "short_name": "ZKVault",
+  "name": "ZK Identity Vault",
   "icons": [
     {
       "src": "https://cdn-icons-png.flaticon.com/512/1162/1162473.png",
@@ -13,5 +13,5 @@
   "display": "standalone",
   "orientation": "portrait",
   "theme_color": "#0f172a",
-  "background_color": "#0f172a"
+  "background_color": "#f1f5f9"
 }
