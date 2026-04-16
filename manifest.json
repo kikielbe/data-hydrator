@@ -1,0 +1,16 @@
+{
+  "short_name": "ZK-Hydrator",
+  "name": "Zero-Knowledge Data Hydrator",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/2091/2091530.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#0284c7",
+  "background_color": "#f8fafc"
+}

@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zero-Knowledge Data Hydrator | Secure Edition</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono&display=swap" rel="stylesheet">
+
+    <style>
+        :root { --zk-blue: #0284c7; --zk-green: #10b981; --zk-bg: #f8fafc; }
+        body { background-color: var(--zk-bg); font-family: 'Inter', sans-serif; color: #1e293b; }
+        .zk-header { background: white; border-bottom: 1px solid #e2e8f0; padding: 1.25rem 0; position: sticky; top: 0; z-index: 1000; }
+        .card-hydrator { border: none; border-radius: 16px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); overflow: hidden; background: white; }
+        
+        /* Status Badge Pulse */
+        .status-pill { padding: 6px 14px; border-radius: 50px; font-size: 0.75rem; font-weight: 700; display: inline-flex; align-items: center; }
+        .pulse-dot { width: 8px; height: 8px; border-radius: 50%; margin-right: 10px; position: relative; }
+        .online .pulse-dot { background-color: var(--zk-green); }
+        .online .pulse-dot::after {
+            content: ""; position: absolute; width: 100%; height: 100%; 
+            background: var(--zk-green); border-radius: 50%; animation: zk-pulse 2s infinite;
+        }
+        @keyframes zk-pulse { 0% { transform: scale(1); opacity: 1; } 100% { transform: scale(3.5); opacity: 0; } }
+
+        .btn-zk { border-radius: 10px; padding: 10px 20px; font-weight: 600; transition: all 0.2s; }
+        .btn-zk-primary { background-color: var(--zk-blue); border: none; color: white; }
+        .btn-zk-primary:hover { background-color: #0369a1; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3); }
+        .table thead th { background-color: #f1f5f9; padding: 1rem; text-transform: uppercase; font-size: 0.7rem; color: #475569; border: none; }
+        .font-mono { font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; }
+        .hidden-node { display: none !important; }
+    </style>
+</head>
+<body>
+
+<header class="zk-header mb-5">
+    <div class="container d-flex flex-column flex-md-row justify-content-between align-items-md-center">
+        <div class="mb-3 mb-md-0">
+            <h4 class="fw-bold d-flex align-items-center mb-1"><i class="bi bi-droplet-half text-primary me-2"></i>ZK Data Hydrator</h4>
+            <div id="connectionStatus"></div>
+        </div>
+        <div class="d-flex gap-2">
+            <label id="btnLink" class="btn btn-zk btn-zk-primary shadow-sm">
+                <i class="bi bi-database-fill-add me-2"></i>Link Local Engine
+                <input type="file" id="filePicker" accept=".json" hidden>
+            </label>
+            <button id="btnUnlink" class="btn btn-zk btn-outline-danger shadow-sm hidden-node" onclick="terminateHydrator()">
+                <i class="bi bi-shield-slash-fill me-2"></i>Terminate
+            </button>
+        </div>
+    </div>
+</header>
+
+<div class="container">
+    <div class="card card-hydrator">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th class="ps-4">System Identity</th>
+                            <th>Hydrated Identity</th>
+                            <th>Node Status</th>
+                            <th class="text-center">Integrity</th>
+                        </tr>
+                    </thead>
+                    <tbody id="hydratorBody"></tbody>
+                </table>
+            </div>
+        </div>
+        <div class="card-footer bg-white border-0 py-4 d-flex flex-column flex-md-row justify-content-between align-items-center">
+            <span id="paginationInfo" class="text-muted small mb-3 mb-md-0"></span>
+            <nav><ul class="pagination pagination-sm mb-0" id="zkPagination"></ul></nav>
+        </div>
+    </div>
+</div>
+
+<footer class="text-center py-5 text-muted small">
+    <p>&copy; 2026 Zero-Knowledge Architecture. All Data remains Client-Side.</p>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    // 1. DATA SIMULASI SERVER
+    const serverNodes = Array.from({length: 100}, (_, i) => ({
+        uuid: `ID-${1000 + (i + 1)}`,
+        masked: `NODE_0x${Math.random().toString(16).substring(2, 8).toUpperCase()}`,
+        status: i % 5 === 0 ? "High Priority" : "Standard Node"
+    }));
+
+    let localKeyMap = null;
+    let currentPage = 1;
+    const itemsPerPage = 10;
+
+    const tableBody = document.getElementById('hydratorBody');
+    const btnLink = document.getElementById('btnLink');
+    const btnUnlink = document.getElementById('btnUnlink');
+    const statusDiv = document.getElementById('connectionStatus');
+    const filePicker = document.getElementById('filePicker');
+
+    // 2. CORE ENGINE
+    function runHydrator() {
+        const cachedData = localStorage.getItem('zk_vault_key');
+        
+        if (cachedData) {
+            try {
+                localKeyMap = JSON.parse(cachedData);
+                btnLink.classList.add('hidden-node');
+                btnUnlink.classList.remove('hidden-node');
+                statusDiv.innerHTML = `<span class="status-pill online text-success border border-success-subtle bg-success-subtle shadow-sm"><span class="pulse-dot"></span> LOCAL ENGINE ACTIVE</span>`;
+            } catch (e) {
+                localStorage.removeItem('zk_vault_key');
+            }
+        } else {
+            localKeyMap = null;
+            btnLink.classList.remove('hidden-node');
+            btnUnlink.classList.add('hidden-node');
+            statusDiv.innerHTML = `<span class="status-pill text-danger border border-danger-subtle bg-danger-subtle shadow-sm"><i class="bi bi-shield-fill-exclamation me-2"></i>SERVER DATA MASKED</span>`;
+        }
+        renderView();
+    }
+
+    function renderView() {
+        const offset = (currentPage - 1) * itemsPerPage;
+        const currentNodes = serverNodes.slice(offset, offset + itemsPerPage);
+        tableBody.innerHTML = "";
+        currentNodes.forEach(node => {
+            const hydratedName = localKeyMap ? localKeyMap[node.uuid] : null;
+            tableBody.innerHTML += `<tr><td class="ps-4 font-mono text-secondary">${node.uuid}</td><td>${hydratedName ? `<span class="fw-bold text-dark">${hydratedName}</span>` : `<span class="text-muted fst-italic">${node.masked}</span>`}</td><td><span class="badge ${node.status === 'High Priority' ? 'bg-primary' : 'bg-light text-dark border'}">${node.status}</span></td><td class="text-center">${hydratedName ? '<i class="bi bi-patch-check-fill text-success fs-5"></i>' : '<i class="bi bi-shield-lock text-warning fs-5"></i>'}</td></tr>`;
+        });
+        document.getElementById('paginationInfo').innerText = `Displaying ${offset + 1} - ${Math.min(offset + itemsPerPage, 100)} of 100 nodes`;
+        renderPaginationUI();
+    }
+
+    function renderPaginationUI() {
+        const pg = document.getElementById('zkPagination');
+        pg.innerHTML = "";
+        const totalPages = 10;
+        for(let i=1; i<=totalPages; i++) {
+            pg.innerHTML += `<li class="page-item ${i === currentPage ? 'active' : ''}"><a class="page-link" href="#" onclick="setPage(event, ${i})">${i}</a></li>`;
+        }
+    }
+
+    window.setPage = (e, p) => { e.preventDefault(); currentPage = p; renderView(); };
+
+    // 3. HANDLERS
+    function showConnectionReminder() {
+        if (!localStorage.getItem('zk_vault_key')) {
+            const Toast = Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: true, confirmButtonText: 'Connect Now', confirmButtonColor: '#0284c7', timer: 10000, timerProgressBar: true });
+            Toast.fire({ icon: 'info', title: 'Local Engine Inactive', text: 'Link your base.json to hydrate identities.' }).then((result) => { if (result.isConfirmed) filePicker.click(); });
+        }
+    }
+
+    filePicker.addEventListener('click', function() { this.value = null; });
+    filePicker.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+            try {
+                JSON.parse(ev.target.result); 
+                localStorage.setItem('zk_vault_key', ev.target.result);
+                Swal.fire({ title: 'Hydration Successful', icon: 'success', timer: 1500, showConfirmButton: false, toast: true, position: 'top-end' });
+                runHydrator();
+            } catch (err) { Swal.fire('Error', 'Invalid JSON format.', 'error'); }
+        };
+        reader.readAsText(file);
+    });
+
+    function terminateHydrator() {
+        Swal.fire({ title: 'Terminate Session?', text: "Identity mapping will be flushed.", icon: 'warning', showCancelButton: true, confirmButtonColor: '#dc3545', confirmButtonText: 'Yes, Terminate' }).then((res) => {
+            if (res.isConfirmed) {
+                localStorage.removeItem('zk_vault_key');
+                localKeyMap = null;
+                runHydrator();
+            }
+        });
+    }
+
+    window.onload = () => { runHydrator(); setTimeout(showConnectionReminder, 3000); };
+</script>
+
+<script>
+  // Mendaftarkan Service Worker untuk PWA
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js').then(reg => {
+        console.log('PWA: Service Worker terdaftar!', reg.scope);
+      }).catch(err => {
+        console.log('PWA: Gagal mendaftarkan Service Worker', err);
+      });
+    });
+  }
+</script>
+
+</body>
+</html>
