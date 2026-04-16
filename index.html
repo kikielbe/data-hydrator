@@ -6,21 +6,31 @@
     <title>ZK Vault Mobile</title>
     
     <meta name="theme-color" content="#0f172a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="manifest" href="manifest.json">
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
     
     <style>
-        body { 
-            background-color: #f1f5f9; 
-            font-family: 'Plus Jakarta Sans', sans-serif; 
-            padding-bottom: 90px;
+        :root {
+            --primary-bg: #f1f5f9;
+            --accent-color: #0284c7;
+            --dark-navy: #0f172a;
         }
 
+        body { 
+            background-color: var(--primary-bg); 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            padding-bottom: 100px;
+            color: #1e293b;
+        }
+
+        /* Header Mobile */
         .mobile-header {
-            background: #0f172a;
+            background: var(--dark-navy);
             color: white;
             padding: 25px 20px;
             border-radius: 0 0 30px 30px;
@@ -30,69 +40,113 @@
             z-index: 1000;
         }
 
+        /* Data Card */
         .data-card {
             border: none;
             border-radius: 18px;
             background: white;
-            margin-bottom: 15px;
+            margin-bottom: 12px;
             padding: 18px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
-            transition: transform 0.2s;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.04);
+            transition: transform 0.1s ease;
         }
 
-        .data-card:active { transform: scale(0.98); }
+        .data-card:active { transform: scale(0.97); }
 
+        .id-label {
+            font-size: 0.7rem;
+            font-weight: 800;
+            color: #94a3b8;
+            letter-spacing: 0.5px;
+            font-family: monospace;
+        }
+
+        .name-label {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--dark-navy);
+        }
+
+        /* Status Badge */
+        .status-badge {
+            font-size: 0.65rem;
+            padding: 5px 12px;
+            border-radius: 30px;
+            font-weight: 800;
+        }
+
+        /* Pagination */
+        .page-info {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #64748b;
+        }
+
+        /* Bottom Navigation Rapi */
         .bottom-nav {
             position: fixed;
             bottom: 0;
             left: 0;
             right: 0;
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
+            height: 85px;
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(15px);
             display: flex;
+            align-items: flex-end;
             justify-content: space-around;
-            padding: 15px 0;
+            padding-bottom: 15px;
             border-top: 1px solid #e2e8f0;
-            z-index: 1000;
+            z-index: 2000;
+            box-shadow: 0 -5px 20px rgba(0,0,0,0.05);
         }
 
         .nav-item {
             text-align: center;
-            color: #64748b;
+            color: #94a3b8;
             text-decoration: none;
-            font-size: 0.7rem;
-            font-weight: 700;
+            font-size: 0.65rem;
+            font-weight: 800;
             flex: 1;
+            transition: all 0.2s ease;
         }
 
-        .nav-item.active { color: #0284c7; }
-        .nav-item i { font-size: 1.5rem; display: block; margin-bottom: 2px; }
+        .nav-item.active { color: var(--accent-color); }
+        .nav-item i { font-size: 1.4rem; display: block; margin-bottom: 4px; }
+
+        .nav-center {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            top: -20px;
+        }
 
         .fab-link {
-            background: #0284c7;
+            background: linear-gradient(135deg, #0284c7, #0369a1);
             color: white;
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
+            width: 62px;
+            height: 62px;
+            border-radius: 20px;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-top: -40px;
-            border: 5px solid #f1f5f9;
-            box-shadow: 0 8px 15px rgba(2, 132, 199, 0.3);
+            border: 6px solid var(--primary-bg);
+            box-shadow: 0 8px 25px rgba(2, 132, 199, 0.4);
+            margin-bottom: 6px;
         }
 
-        .status-badge {
+        .fab-label {
+            color: var(--accent-color);
             font-size: 0.65rem;
-            padding: 5px 12px;
-            border-radius: 30px;
-            letter-spacing: 0.5px;
+            font-weight: 800;
+            text-transform: uppercase;
         }
 
-        #pageIndicator { font-size: 0.85rem; }
+        .hidden-node { display: none !important; }
     </style>
 </head>
 <body>
@@ -101,7 +155,7 @@
     <div class="d-flex justify-content-between align-items-center">
         <div>
             <h4 class="fw-bold mb-0">ZK Vault</h4>
-            <small id="statusText" class="opacity-75 font-monospace">Disconnected</small>
+            <small id="statusText" class="opacity-75">Status: Disconnected</small>
         </div>
         <div id="connectionDot" class="rounded-circle" style="width: 12px; height: 12px; background: #ef4444; border: 2px solid rgba(255,255,255,0.2);"></div>
     </div>
@@ -111,47 +165,49 @@
     <div id="dataContainer"></div>
 
     <div class="d-flex justify-content-between align-items-center mt-4 mb-4" id="paginationControls">
-        <button class="btn btn-dark btn-sm rounded-pill px-3" id="prevBtn" onclick="changePage(-1)">
-            <i class="bi bi-arrow-left"></i>
+        <button class="btn btn-dark btn-sm rounded-pill px-4" id="prevBtn" onclick="changePage(-1)">
+            <i class="bi bi-chevron-left"></i>
         </button>
-        <span class="fw-bold text-secondary" id="pageIndicator">Page 1 / 1</span>
-        <button class="btn btn-dark btn-sm rounded-pill px-3" id="nextBtn" onclick="changePage(1)">
-            <i class="bi bi-arrow-right"></i>
+        <span class="page-info" id="pageIndicator">Page 1 of 1</span>
+        <button class="btn btn-dark btn-sm rounded-pill px-4" id="nextBtn" onclick="changePage(1)">
+            <i class="bi bi-chevron-right"></i>
         </button>
     </div>
 </div>
 
 <div class="bottom-nav">
-    <a href="#" class="nav-item active" onclick="window.scrollTo(0,0)">
-        <i class="bi bi-shield-shaded"></i> Vault
+    <a href="#" class="nav-item active" onclick="window.scrollTo({top:0, behavior:'smooth'})">
+        <i class="bi bi-shield-lock-fill"></i>
+        <span>VAULT</span>
     </a>
     
-    <label class="nav-item">
+    <label class="nav-center">
         <div class="fab-link">
-            <i class="bi bi-plus-lg"></i>
+            <i class="bi bi-plus-lg fs-3"></i>
         </div>
-        <span style="display:block; margin-top:5px;">Link JSON</span>
+        <span class="fab-label">LINK</span>
         <input type="file" id="filePicker" accept=".json" hidden>
     </label>
 
     <a href="#" class="nav-item" onclick="resetApp()">
-        <i class="bi bi-arrow-counterclockwise"></i> Reset
+        <i class="bi bi-arrow-counterclockwise"></i>
+        <span>RESET</span>
     </a>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-    // 1. DATA MASTER (Simulasi Sisi Server)
+    // 1. SIMULASI DATA SERVER
     const serverNodes = Array.from({length: 100}, (_, i) => ({
         uuid: `ID-${1001 + i}`,
-        masked: `HIDDEN_NODE_${1000 + i}`
+        masked: `NODE_0x${(1000 + i).toString(16).toUpperCase()}`
     }));
 
     let localMap = null;
     let currentPage = 1;
     const itemsPerPage = 10;
 
-    // 2. INITIALIZATION (Auto-Unlock)
+    // 2. INIT ENGINE
     function init() {
         const saved = localStorage.getItem('zk_simple_key');
         const statusText = document.getElementById('statusText');
@@ -160,14 +216,14 @@
         if (saved) {
             try {
                 localMap = JSON.parse(saved);
-                statusText.innerText = "Engine: Active";
+                statusText.innerText = "Status: Connected";
                 statusDot.style.background = "#10b981";
             } catch(e) {
                 localStorage.removeItem('zk_simple_key');
             }
         } else {
             localMap = null;
-            statusText.innerText = "Engine: Masked";
+            statusText.innerText = "Status: Masked";
             statusDot.style.background = "#ef4444";
         }
         render();
@@ -182,8 +238,8 @@
             ? Object.keys(localMap).map(key => ({ uuid: key, masked: 'NODE_MASKED' }))
             : serverNodes;
 
-        const totalPages = Math.ceil(dataSource.length / itemsPerPage);
-        if (currentPage > totalPages) currentPage = totalPages || 1;
+        const totalPages = Math.ceil(dataSource.length / itemsPerPage) || 1;
+        if (currentPage > totalPages) currentPage = totalPages;
 
         const start = (currentPage - 1) * itemsPerPage;
         const pageData = dataSource.slice(start, start + itemsPerPage);
@@ -193,57 +249,54 @@
             container.innerHTML += `
                 <div class="data-card">
                     <div>
-                        <div class="text-muted small fw-bold font-monospace">${node.uuid}</div>
-                        <div class="fw-bold h6 mb-0 text-dark">${realName ? realName : node.masked}</div>
+                        <div class="id-label">${node.uuid}</div>
+                        <div class="name-label">${realName ? realName : node.masked}</div>
                     </div>
                     <div>
                         ${realName 
-                            ? '<span class="status-badge bg-success-subtle text-success fw-bold">VERIFIED</span>' 
-                            : '<span class="status-badge bg-light text-muted fw-bold">MASKED</span>'}
+                            ? '<span class="status-badge bg-success-subtle text-success">VERIFIED</span>' 
+                            : '<span class="status-badge bg-light text-muted">MASKED</span>'}
                     </div>
                 </div>`;
         });
 
-        document.getElementById('pageIndicator').innerText = `Page ${currentPage} / ${totalPages}`;
+        document.getElementById('pageIndicator').innerText = `Page ${currentPage} of ${totalPages}`;
         document.getElementById('prevBtn').disabled = (currentPage === 1);
-        document.getElementById('nextBtn').disabled = (currentPage === totalPages || totalPages === 0);
+        document.getElementById('nextBtn').disabled = (currentPage === totalPages);
         document.getElementById('paginationControls').style.display = (totalPages <= 1) ? 'none' : 'flex';
     }
 
     function changePage(step) {
         currentPage += step;
         render();
-        window.scrollTo(0, 0);
+        window.scrollTo({top: 0, behavior: 'smooth'});
     }
 
-    // 4. FILE PICKER
+    // 4. EVENT HANDLERS
     document.getElementById('filePicker').addEventListener('change', function(e) {
-        const file = e.target.files[0];
-        if (!file) return;
-
         const reader = new FileReader();
         reader.onload = (ev) => {
             try {
-                JSON.parse(ev.target.result); // Validasi JSON
+                JSON.parse(ev.target.result); 
                 localStorage.setItem('zk_simple_key', ev.target.result);
                 currentPage = 1;
                 init();
-                Swal.fire({ icon: 'success', title: 'Identity Linked', toast: true, position: 'top', showConfirmButton: false, timer: 2000 });
+                Swal.fire({ icon: 'success', title: 'Vault Updated', toast: true, position: 'top', showConfirmButton: false, timer: 1500 });
             } catch(err) {
-                Swal.fire('Error', 'File JSON tidak valid', 'error');
+                Swal.fire('Error', 'Format JSON salah', 'error');
             }
         };
-        reader.readAsText(file);
+        reader.readAsText(e.target.files[0]);
     });
 
     function resetApp() {
         Swal.fire({
-            title: 'Hapus Sesi?',
-            text: "Koneksi ke identitas lokal akan dihapus.",
+            title: 'Clear Session?',
+            text: "Koneksi ke identitas lokal akan diputus.",
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#0f172a',
-            confirmButtonText: 'Ya, Reset'
+            confirmButtonText: 'Ya, Clear'
         }).then((result) => {
             if (result.isConfirmed) {
                 localStorage.removeItem('zk_simple_key');
@@ -253,10 +306,10 @@
         });
     }
 
-    // PWA REGISTRATION
+    // 5. PWA SERVICE WORKER
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-            navigator.serviceWorker.register('./sw.js');
+            navigator.serviceWorker.register('./sw.js').catch(() => {});
         });
     }
 
