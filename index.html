@@ -6,8 +6,7 @@
     <title>ZK Vault Mobile</title>
     
     <meta name="theme-color" content="#0f172a">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes"> <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="manifest" href="manifest.json">
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -28,7 +27,6 @@
             color: #1e293b;
         }
 
-        /* Header Mobile */
         .mobile-header {
             background: var(--dark-navy);
             color: white;
@@ -40,7 +38,6 @@
             z-index: 1000;
         }
 
-        /* Data Card */
         .data-card {
             border: none;
             border-radius: 18px;
@@ -70,7 +67,6 @@
             color: var(--dark-navy);
         }
 
-        /* Status Badge */
         .status-badge {
             font-size: 0.65rem;
             padding: 5px 12px;
@@ -78,14 +74,7 @@
             font-weight: 800;
         }
 
-        /* Pagination */
-        .page-info {
-            font-size: 0.85rem;
-            font-weight: 700;
-            color: #64748b;
-        }
-
-        /* Bottom Navigation Rapi */
+        /* Bottom Navigation Modern */
         .bottom-nav {
             position: fixed;
             bottom: 0;
@@ -110,7 +99,6 @@
             font-size: 0.65rem;
             font-weight: 800;
             flex: 1;
-            transition: all 0.2s ease;
         }
 
         .nav-item.active { color: var(--accent-color); }
@@ -145,8 +133,6 @@
             font-weight: 800;
             text-transform: uppercase;
         }
-
-        .hidden-node { display: none !important; }
     </style>
 </head>
 <body>
@@ -168,7 +154,7 @@
         <button class="btn btn-dark btn-sm rounded-pill px-4" id="prevBtn" onclick="changePage(-1)">
             <i class="bi bi-chevron-left"></i>
         </button>
-        <span class="page-info" id="pageIndicator">Page 1 of 1</span>
+        <span class="fw-bold text-secondary small" id="pageIndicator">Page 1 of 1</span>
         <button class="btn btn-dark btn-sm rounded-pill px-4" id="nextBtn" onclick="changePage(1)">
             <i class="bi bi-chevron-right"></i>
         </button>
@@ -197,7 +183,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-    // 1. SIMULASI DATA SERVER
+    // Data Simulasi Server
     const serverNodes = Array.from({length: 100}, (_, i) => ({
         uuid: `ID-${1001 + i}`,
         masked: `NODE_0x${(1000 + i).toString(16).toUpperCase()}`
@@ -207,7 +193,6 @@
     let currentPage = 1;
     const itemsPerPage = 10;
 
-    // 2. INIT ENGINE
     function init() {
         const saved = localStorage.getItem('zk_simple_key');
         const statusText = document.getElementById('statusText');
@@ -229,12 +214,11 @@
         render();
     }
 
-    // 3. RENDER ENGINE
     function render() {
         const container = document.getElementById('dataContainer');
         container.innerHTML = "";
 
-        // KUNCI PERUBAHAN: Kita selalu gunakan serverNodes sebagai sumber utama
+        // True Hydration: Gunakan serverNodes sebagai basis data utama
         const dataSource = serverNodes; 
 
         const totalPages = Math.ceil(dataSource.length / itemsPerPage) || 1;
@@ -244,9 +228,7 @@
         const pageData = dataSource.slice(start, start + itemsPerPage);
 
         pageData.forEach(node => {
-            // Cek apakah ID dari server ini ada di file JSON lokal kita
             const realName = localMap ? localMap[node.uuid] : null;
-            
             container.innerHTML += `
                 <div class="data-card">
                     <div>
@@ -273,16 +255,14 @@
         window.scrollTo({top: 0, behavior: 'smooth'});
     }
 
-    // 4. EVENT HANDLERS
     document.getElementById('filePicker').addEventListener('change', function(e) {
         const reader = new FileReader();
         reader.onload = (ev) => {
             try {
                 JSON.parse(ev.target.result); 
                 localStorage.setItem('zk_simple_key', ev.target.result);
-                currentPage = 1;
                 init();
-                Swal.fire({ icon: 'success', title: 'Vault Updated', toast: true, position: 'top', showConfirmButton: false, timer: 1500 });
+                Swal.fire({ icon: 'success', title: 'Identity Linked', toast: true, position: 'top', showConfirmButton: false, timer: 1500 });
             } catch(err) {
                 Swal.fire('Error', 'Format JSON salah', 'error');
             }
@@ -301,13 +281,11 @@
         }).then((result) => {
             if (result.isConfirmed) {
                 localStorage.removeItem('zk_simple_key');
-                currentPage = 1;
                 init();
             }
         });
     }
 
-    // 5. PWA SERVICE WORKER
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
             navigator.serviceWorker.register('./sw.js').catch(() => {});
