@@ -234,9 +234,8 @@
         const container = document.getElementById('dataContainer');
         container.innerHTML = "";
 
-        const dataSource = localMap 
-            ? Object.keys(localMap).map(key => ({ uuid: key, masked: 'NODE_MASKED' }))
-            : serverNodes;
+        // KUNCI PERUBAHAN: Kita selalu gunakan serverNodes sebagai sumber utama
+        const dataSource = serverNodes; 
 
         const totalPages = Math.ceil(dataSource.length / itemsPerPage) || 1;
         if (currentPage > totalPages) currentPage = totalPages;
@@ -245,7 +244,9 @@
         const pageData = dataSource.slice(start, start + itemsPerPage);
 
         pageData.forEach(node => {
+            // Cek apakah ID dari server ini ada di file JSON lokal kita
             const realName = localMap ? localMap[node.uuid] : null;
+            
             container.innerHTML += `
                 <div class="data-card">
                     <div>
