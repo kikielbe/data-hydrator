@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ZK Vault Mobile</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body { 
+            background-color: #f1f5f9; 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            padding-bottom: 80px; /* Ruang untuk bottom nav */
+        }
+
+        /* Header Mobile */
+        .mobile-header {
+            background: #0f172a;
+            color: white;
+            padding: 20px;
+            border-radius: 0 0 25px 25px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        /* Card Style */
+        .data-card {
+            border: none;
+            border-radius: 15px;
+            background: white;
+            margin-bottom: 12px;
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+        }
+
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            display: flex;
+            justify-content: space-around;
+            padding: 12px 0;
+            border-top: 1px solid #e2e8f0;
+            z-index: 1000;
+        }
+
+        .nav-item {
+            text-align: center;
+            color: #64748b;
+            text-decoration: none;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .nav-item.active { color: #0284c7; }
+        .nav-item i { font-size: 1.4rem; display: block; }
+
+        .status-badge {
+            font-size: 0.7rem;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-weight: 700;
+        }
+
+        .hidden-node { display: none !important; }
+
+        /* Floating Action Button Style for Link */
+        .fab-link {
+            background: #0284c7;
+            color: white;
+            width: 55px;
+            height: 55px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: -30px;
+            border: 4px solid #f1f5f9;
+            box-shadow: 0 4px 10px rgba(2, 132, 199, 0.4);
+        }
+    </style>
+</head>
+<body>
+
+<div class="mobile-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h5 class="fw-bold mb-0">ZK Vault</h5>
+            <small id="statusText" class="opacity-75">Checking connection...</small>
+        </div>
+        <div id="connectionDot" class="rounded-circle" style="width: 12px; height: 12px; background: grey;"></div>
+    </div>
+</div>
+
+<div class="container mt-4" id="mainContent">
+    <div id="dataContainer"></div>
+</div>
+
+<div class="bottom-nav">
+    <a href="#" class="nav-item active" onclick="location.reload()">
+        <i class="bi bi-grid-fill"></i> Dashboard
+    </a>
+    
+    <label class="nav-item">
+        <div class="fab-link">
+            <i class="bi bi-plus-lg"></i>
+        </div>
+        Link JSON
+        <input type="file" id="filePicker" accept=".json" hidden>
+    </label>
+
+    <a href="#" class="nav-item text-danger" id="btnReset" onclick="resetApp()">
+        <i class="bi bi-trash3"></i> Reset
+    </a>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    const serverNodes = Array.from({length: 15}, (_, i) => ({
+        uuid: `ID-${1001 + i}`,
+        masked: `NODE_0x${(1000+i).toString(16)}`
+    }));
+
+    let localMap = null;
+
+    function init() {
+        const saved = localStorage.getItem('zk_simple_key');
+        const statusText = document.getElementById('statusText');
+        const statusDot = document.getElementById('connectionDot');
+        const btnReset = document.getElementById('btnReset');
+
+        if (saved) {
+            localMap = JSON.parse(saved);
+            statusText.innerText = "Local Engine Active";
+            statusDot.style.background = "#10b981";
+            btnReset.classList.remove('hidden-node');
+        } else {
+            localMap = null;
+            statusText.innerText = "System Masked";
+            statusDot.style.background = "#ef4444";
+            btnReset.classList.add('hidden-node');
+        }
+        render();
+    }
+
+    function render() {
+        const container = document.getElementById('dataContainer');
+        container.innerHTML = "";
+        
+        serverNodes.forEach(node => {
+            const realName = localMap ? localMap[node.uuid] : null;
+            container.innerHTML += `
+                <div class="data-card">
+                    <div>
+                        <div class="text-muted small fw-bold">${node.uuid}</div>
+                        <div class="fw-bold h6 mb-0">${realName ? realName : node.masked}</div>
+                    </div>
+                    <div>
+                        ${realName 
+                            ? '<span class="status-badge bg-success-subtle text-success">VERIFIED</span>' 
+                            : '<span class="status-badge bg-light text-muted">MASKED</span>'}
+                    </div>
+                </div>`;
+        });
+    }
+
+    document.getElementById('filePicker').addEventListener('change', function(e) {
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+            localStorage.setItem('zk_simple_key', ev.target.result);
+            Swal.fire({ icon: 'success', title: 'Vault Linked!', toast: true, position: 'top', showConfirmButton: false, timer: 2000 });
+            init();
+        };
+        reader.readAsText(e.target.files[0]);
+    });
+
+    function resetApp() {
+        Swal.fire({
+            title: 'Hapus Data?',
+            text: "Koneksi ke identitas lokal akan terputus.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Ya, Hapus'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                localStorage.removeItem('zk_simple_key');
+                init();
+            }
+        });
+    }
+
+    // PWA Service Worker Registration
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('./sw.js');
+        });
+    }
+
+    window.onload = init;
+</script>
+</body>
+</html>
